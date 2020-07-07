@@ -1,5 +1,11 @@
 library(viridis)
 
+devtools::install_github("joelleforestier/PridePalettes")
+library(PridePalettes)
+pride_palette("philly_poc_pride")
+flag("trans_pride")
+
+
 file = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/review/for_review_figure.csv"
 x = read.table(file,sep="\t",header=T)
 plot(x$START,1:nrow(x),
@@ -248,20 +254,22 @@ dev.off()
 #png("locomotion_type_structure_plus_divergence_2plot.png",width=600,height=300)
 pdf("locomotion_type_structure_plus_divergence_2plot.pdf",width=7,height=4)
 par(mfrow=c(1,2),mar=c(5,4,0.5,0))
-barplot(t(loc_str),col=c("darkblue","blue","cyan"),
+b=barplot(t(loc_str),col=c("darkblue","blue","cyan"),
         ylab="Number Species",
         xlab="",ylim=c(0,30),las=2)
-legend("topleft",legend=c("Yes","No","Unclear"),
+legend(x=b[1],y=30,legend=c("Yes","No","Unclear"),
        fill=c("cyan","blue","darkblue"),bty="n",
-       title="Structure Present")
+       title="Structure Present",
+       xjust=0,yjust=1)
 box()
-barplot(t(loc_div_stronly[,c(1,2,3,5,6,4)]),col=c("darkred","red","orange","yellow","magenta","purple"),
+b=barplot(t(loc_div_stronly[,c(1,2,3,5,6,4)]),col=c("darkred","red","orange","yellow","magenta","purple"),
         ylab="Number Species",
         xlab="",ylim=c(0,30),las=2)
-legend("topleft",legend=rev(c("Unclear","Miocene","Mio-Pliocene",
+legend(x=b[1],y=30,legend=rev(c("Unclear","Miocene","Mio-Pliocene",
                           "Pliocene","Plio-Pleistocene","Pleistocene")),
        fill=rev(c("darkred","red","orange","yellow","magenta","purple")),bty="n",
-       title="Divergence")
+       title="Divergence",
+       xjust=0,yjust=1)
 box()
 dev.off()
 
@@ -344,13 +352,16 @@ listcolors=c(blues(5),greens(2),purples(2),reds(3),browns(2),oranges(2))
 #listcolors=c(blues(5),greens(3),purples(3),browns(2),reds(5),oranges(2))
 
 
-png("number_within_range_cfb_timelocomotion.png",width=800,height=400)
+pdf("number_within_range_cfb_timelocomotion_blackwhite.pdf",width=10,height=6)
+#png("number_within_range_cfb_timelocomotion.png",width=800,height=400)
 #pdf("number_within_range_cfb_timelocomotion.pdf",width=10,height=5)
-par(mar=c(4,4,0,0))
+par(mar=c(4,4,0,0),col="white",col.axis="white",col.lab="white",
+    col.main="white",bg="black")
 bp=barplot(z,col=listcolors,
            border=listcolors,xlab="Longitude",space=0,ylim=c(0,26),
-           ylab="Proportion of Species Overlapping",beside=F)
+           ylab="Number of Species Overlapping",beside=F)
 axis(1,at=bp[ticks],labels=labelvals,las=2)
+box()
 legend("topleft",legend=rownames(z),fill=listcolors,bty="n",
        cex=1)
 dev.off()
@@ -480,6 +491,7 @@ df = read.table(filename,
                 stringsAsFactors = F)
 
 head(df)
+
 df=df[df$Divergence.Time.Epoch!="Unclear",]
 
 df$Divergence.Time.Epoch[df$Divergence.Time.Epoch=="Pleistocene"] = 1
