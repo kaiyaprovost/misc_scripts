@@ -173,15 +173,15 @@ plot(counts)
 propcounts = counts/nrow(df)
 
 #png("proportion_within_range_cfb.png")
-#plot(vals,propcounts,ylim=c(-0.2,0.7),type="l")
-#points(df$W.Location.Barrier,seq(1,0.7,length.out=39),cex=0.5,col=viridis(39))
-#points(df$E.Location.Barrier,seq(1,0.7,length.out=39),cex=0.5,col=viridis(39))
-#segments(df$W.Location.Barrier,seq(1,0.7,length.out=39),
+# plot(vals,propcounts,ylim=c(-0.2,0.7),type="l")
+# points(df$W.Location.Barrier,seq(1,0.7,length.out=39),cex=0.5,col=viridis(39))
+# points(df$E.Location.Barrier,seq(1,0.7,length.out=39),cex=0.5,col=viridis(39))
+# segments(df$W.Location.Barrier,seq(1,0.7,length.out=39),
 #         df$E.Location.Barrier,seq(1,0.7,length.out=39),
 #         col=viridis(39))
-#points(df$W.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),cex=0.5,col=viridis(39))
-#points(df$E.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),cex=0.5,col=viridis(39))
-#segments(df$W.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),
+# points(df$W.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),cex=0.5,col=viridis(39))
+# points(df$E.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),cex=0.5,col=viridis(39))
+# segments(df$W.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),
 #         df$E.Location.Barrier,seq(0.3,-0.2,length.out=length(df$W.Location.Barrier)),
 #         col=viridis(39))
 #dev.off()
@@ -189,13 +189,17 @@ propcounts = counts/nrow(df)
 ticks=which(vals %% 1 == 0)
 labelvals = vals[ticks]
 
+pdf("number_within_range_cfb_timelocomotion_gradient.pdf",width=10,height=6)
+par(mar=c(4,4,0,0),col="white",col.axis="white",col.lab="white",
+    col.main="white",bg="black")
 barcols=viridis(max(counts)+1)[counts+1]
-#png("proportion_within_range_cfb_nolines.png")
 bp=barplot(propcounts,col=barcols,border=barcols,xlab="Longitude",
            ylab="Proportion of Species Overlapping")
 axis(1,at=bp[ticks],labels=labelvals,las=2)
-#dev.off()
+dev.off()
 
+ascii=raster::raster("/Users/kprovost/Pictures/AddedPredThin_BestModel_Amphispiza bilineata_addedLayers_worldclim.asc")
+plot(ascii,colNA="black",col=rgb(0,0,0,0))
 
 ## dispersal types
 disp = read.table("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/review/cfb_ch1_dispersaltype.txt",
