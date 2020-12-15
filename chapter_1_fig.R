@@ -5,9 +5,347 @@ library(PridePalettes)
 pride_palette("philly_poc_pride")
 flag("trans_pride")
 
+## nov 6 2020 updates here
 
+file = "/Users/kprovost/Dropbox (AMNH)/Dissertation/provost_chapter1_tableofspecies_6nov2020.csv"
+df=read.csv(file,sep=",",header=T,fill=T,stringsAsFactors = F)
+
+suby = df[,c("Gene.Flow.Estimated","Gene.Flow.Present","Divergence.Time.Epoch","Structure","Monophyletic")]
+suby=suby[suby$Divergence.Time.Epoch!="",]
+suby$Divergence.Time.Epoch[suby$Structure=="No"] = "Not Split"
+suby$Gene.Flow.Estimated[suby$Gene.Flow.Estimated==""] = "Unclear"
+suby$Divergence.Time.Epoch[suby$Divergence.Time.Epoch=="Miocene-Pliocene-Pleistocene"] = "Unclear"
+
+suby$GENE.COMBO = suby$Gene.Flow.Estimated
+suby$Gene.Flow.Present[suby$Gene.Flow.Present==""] = "Unclear"
+suby$GENE.COMBO[suby$GENE.COMBO!="No"] = paste("Yes",suby$Gene.Flow.Present[suby$GENE.COMBO!="No"])
+
+taby=table(suby$Divergence.Time.Epoch,suby$GENE.COMBO)
+taby=taby[c("Not Split","Unclear","Pleistocene","Pliocene-Pleistocene",
+            "Pliocene","Miocene-Pliocene","Miocene"),c("No","Yes Yes","Yes Unclear","Yes No")]
+tabx=table(suby$Divergence.Time.Epoch,suby$Monophyletic)
+tabx=tabx[c("Not Split","Unclear","Pleistocene","Pliocene-Pleistocene",
+            "Pliocene","Miocene-Pliocene","Miocene"),c("Yes","Unclear","No")]
+
+png("Chapter_1_GF_mono_dark_6nov2020.png")
+par(mar=c(2,5,0,0))
+barplot(t(taby),horiz=T,las=1,col=c("darkblue","red","orange","yellow"),
+        xlim=c(-22,22),xaxt="n",names=c("Not Split","Unclear",
+                                        "Pleis","Plio-Pleis","Plio","Mio-Plio","Mio"))
+barplot(t(tabx*-1),horiz=T,las=1,col=c("darkgreen","green","lightgreen"),
+        xlim=c(-22,22),add=T,xaxt="n",yaxt="n")
+legend("topright",legend=c("Not Est.","Present",
+                           "Unclear","Absent"),
+       col=c("darkblue","red","orange","yellow"),bty="n",title="Gene Flow",
+       fill=c("darkblue","red","orange","yellow"))
+legend("topleft",legend=c("Yes","Unclear","No"),
+       col=c("darkgreen","green","lightgreen"),bty="n",title="Monophyly",
+       fill=c("darkgreen","green","lightgreen"))
+abline(v=0)
+axis(1,at=c(-20,-15,-10,-5,0,5,10,15,20),labels=c(20,15,10,5,0,5,10,15,20))
+dev.off()
+
+
+
+vals=seq(-119,-98,0.01)
+counts=sapply(vals,FUN=function(x){
+  sum((df$W.Location.Barrier <= x) & (df$E.Location.Barrier >= x),na.rm=T)
+})
+plot(counts)
+propcounts = counts/nrow(df)
+
+ticks=which(vals %% 1 == 0)
+labelvals = vals[ticks]
+
+pdf("number_within_range_cfb_timelocomotion_gradient_6nov2020_white.pdf",width=10,height=6)
+par(mar=c(4,4,0,0))
+barcols=viridis(max(counts)+1)[counts+1]
+bp=barplot(propcounts,col=barcols,border=barcols,xlab="Longitude",
+           ylab="Proportion of Species Overlapping")
+axis(1,at=bp[ticks],labels=labelvals,las=2)
+dev.off()
+
+## dispersal types
+loc_str = table(df[,c("Locomotion.Dispersal","Structure")])
+loc_div = table(disp[,c("Locomotion.Dispersal","Divergence.Time.Epoch")])
+
+loc_div_stronly = table(df[df$Structure!="No",c("Locomotion.Dispersal","Structure")])
+prop.table(loc_str,margin=1)
+
+pdf("locomotion_type_structure_divergence_6nov2020.pdf",height=4,width=6.5)
+#png("locomotion_type_structure_6nov2020.png")
+par(mar=c(5,4,1,0),mfrow=c(1,2))
+barplot(t(loc_str),col=c("darkblue","blue","cyan"),
+        ylab="Number Species",
+        xlab="",ylim=c(0,30),las=2)
+legend("topleft",legend=c("Yes","No","Unclear"),
+       fill=c("cyan","blue","darkblue"),bty="n",
+       title="Structure Present")
+box()
+#dev.off()
+library(RColorBrewer)
+fullrange = brewer.pal(12,"Paired")
+blues=colorRampPalette(fullrange[1:2]) ## pleist
+greens=colorRampPalette(fullrange[3:4]) ## plio
+reds=colorRampPalette(fullrange[5:6]) ## unclear
+oranges=colorRampPalette(fullrange[7:8]) ## plio-pleist
+purples=colorRampPalette(fullrange[9:10]) ## mio-plio
+browns=colorRampPalette(fullrange[11:12]) ## mio 
+#png("locomotion_type_divergence_all_6nov2020.png")
+#par(mar=c(4,4,1,0))
+##
+barplot(t(loc_div[,c(1,2,3,5,6,4)]),col=c(reds(1),browns(1),purples(1),greens(1),oranges(1),blues(1)),
+        ylab="Number Species",las=2,
+        xlab="",ylim=c(0,30))
+legend("topleft",legend=rev(c("Unclear","Miocene","Mio-Pliocene",
+                          "Pliocene","Plio-Pleistocene","Pleistocene")),
+       fill=rev(c(reds(1),browns(1),purples(1),greens(1),oranges(1),blues(1))),bty="n",
+       title="Divergence")
+box()
+dev.off()
+
+png("locomotion_type_divergence_onlystructured.png")
+par(mar=c(4,4,1,0))
+barplot(t(loc_div_stronly[,c(1,2,3,5,6,4)]),col=c("darkblue","red","orange","yellow","magenta","purple"),
+        ylab="Number Species",
+        xlab="",ylim=c(0,30))
+legend("topleft",legend=c("Unclear","Miocene","Mio-Pliocene",
+                          "Pliocene","Plio-Pleistocene","Pleistocene"),
+       fill=c("darkblue","red","orange","yellow","magenta","purple"),bty="n",
+       title="Divergence (Str Only)")
+box()
+dev.off()
+
+
+
+
+#png("locomotion_type_structure_plus_divergence_2plot.png",width=600,height=300)
+pdf("locomotion_type_structure_plus_divergence_2plot.pdf",width=7,height=4)
+par(mfrow=c(1,2),mar=c(5,4,0.5,0))
+b=barplot(t(loc_str),col=c("darkblue","blue","cyan"),
+          ylab="Number Species",
+          xlab="",ylim=c(0,30),las=2)
+legend(x=b[1],y=30,legend=c("Yes","No","Unclear"),
+       fill=c("cyan","blue","darkblue"),bty="n",
+       title="Structure Present",
+       xjust=0,yjust=1)
+box()
+b=barplot(t(loc_div_stronly[,c(1,2,3,5,6,4)]),col=c("darkred","red","orange","yellow","magenta","purple"),
+          ylab="Number Species",
+          xlab="",ylim=c(0,30),las=2)
+legend(x=b[1],y=30,legend=rev(c("Unclear","Miocene","Mio-Pliocene",
+                                "Pliocene","Plio-Pleistocene","Pleistocene")),
+       fill=rev(c("darkred","red","orange","yellow","magenta","purple")),bty="n",
+       title="Divergence",
+       xjust=0,yjust=1)
+box()
+dev.off()
+
+
+unitimes = unique(df$Divergence.Time.Epoch)
+unitimes = c("Pleistocene","Pliocene-Pleistocene","Pliocene","Miocene-Pliocene","Miocene","Unclear")
+vals=seq(-119,-98,0.01)
+histdf = c()
+timelocodf = c()
+namescol=c("Time","Locomotion",vals)
+
+df$Divergence.Time.Epoch2 = df$Divergence.Time.Epoch
+df$Divergence.Time.Epoch2[df$Divergence.Time.Epoch=="Miocene-Pliocene-Pleistocene"] = "Unclear"
+
+for(time in unitimes){
+  temp1 = df[df$Divergence.Time.Epoch2==time,]
+  unilocos = unique(temp1$Locomotion.Dispersal)
+  
+  for(loco in unilocos) {
+    print(time)
+    print(loco)
+    temp2=temp1[temp1$Locomotion.Dispersal==loco,]
+    
+    counts=sapply(vals,FUN=function(x){
+      sum((as.numeric(temp2$W.Location.Barrier) <= x) 
+          & (as.numeric(temp2$E.Location.Barrier) >= x),na.rm = T)
+    })
+    
+    counts[is.na(counts)]=0
+    
+    timlocadd=c(time,loco)
+    
+    if(sum(counts) > 0) {
+      
+      if(is.null(histdf)) {
+        histdf=counts
+      } else {
+        histdf=rbind(histdf,counts)
+      }
+      
+      if(is.null(timelocodf)) {
+        timelocodf=timlocadd
+      } else {
+        timelocodf=rbind(timelocodf,timlocadd)
+      }
+    }
+  }
+}
+#colnames(histdf) = namescol
+rownames(histdf) = NULL
+colnames(histdf) = NULL
+
+class(histdf)
+z=as.table(histdf)
+#colnames(z)=vals
+colnames(z) = NULL
+rownames(z)=paste(timelocodf[,1],timelocodf[,2],sep="-")
+
+summary(vals[which(colSums(z) >= 18)])
+
+library(RColorBrewer)
+ticks=which(vals %% 1 == 0)
+labelvals = vals[ticks]
+
+## set up colors
+
+fullrange = brewer.pal(12,"Paired")
+blues=colorRampPalette(fullrange[1:2])
+greens=colorRampPalette(fullrange[3:4])
+reds=colorRampPalette(fullrange[5:6])
+oranges=colorRampPalette(fullrange[7:8])
+purples=colorRampPalette(fullrange[9:10])
+browns=colorRampPalette(fullrange[11:12])
+#orgbrwn=fullrange[c(8,12)]
+
+# 5, 2, 2, 2, 3, 2
+listcolors=c(blues(4),oranges(3),greens(1),purples(3),browns(2),reds(4))
+# 5, 3, 3, 2, 5, 2
+#listcolors=c(blues(5),greens(3),purples(3),browns(2),reds(5),oranges(2))
+
+
+pdf("number_within_range_cfb_timelocomotion_blackwhite.pdf",width=10,height=6)
+#png("number_within_range_cfb_timelocomotion.png",width=800,height=400)
+#pdf("number_within_range_cfb_timelocomotion.pdf",width=10,height=5)
+par(mar=c(4,4,0,0),col="white",col.axis="white",col.lab="white",
+    col.main="white",bg="black")
+bp=barplot(z,col=listcolors,
+           border=listcolors,xlab="Longitude",space=0,ylim=c(0,26),
+           ylab="Number of Species Overlapping",beside=F)
+axis(1,at=bp[ticks],labels=labelvals,las=2)
+box()
+legend("topleft",legend=rownames(z),fill=listcolors,bty="n",
+       cex=1)
+dev.off()
+
+pdf("number_within_range_cfb_timelocomotion_13nov2020.pdf",width=10,height=6)
+#png("number_within_range_cfb_timelocomotion.png",width=800,height=400)
+#pdf("number_within_range_cfb_timelocomotion.pdf",width=10,height=5)
+par(mar=c(4,4,0,0))
+bp=barplot(z,col=listcolors,
+           border=listcolors,xlab="Longitude",space=0,ylim=c(0,26),
+           ylab="Number of Species Overlapping",beside=F)
+axis(1,at=bp[ticks],labels=labelvals,las=2)
+abline(v=ticks[which(labelvals %in% c(-112,-108))],lwd=2,lty=3)
+box()
+legend("topleft",legend=rownames(z),fill=listcolors,bty="n",
+       cex=1)
+dev.off()
+
+#png("number_within_range_cfb_timelocomotion_separate.png",width=800,height=400)
+pdf("number_within_range_cfb_timelocomotion_separate_13nov2020.pdf",width=10,height=5)
+par(mfrow=c(2,3))
+par(mar=c(4,4,0,0))
+for(time in unique(timelocodf[,1])) {
+  print(time)
+  subsetrows=as.numeric(which(timelocodf[,1] == time))
+  newz=z[subsetrows,]
+  bp=barplot(newz,col=listcolors[subsetrows],
+             border=listcolors[subsetrows],xlab="Longitude",
+             space=0,ylim=c(0,16),
+             ylab="Proportion of Species Overlapping",beside=F)
+  axis(1,at=bp[ticks],labels=labelvals,las=2)
+  abline(v=ticks[which(labelvals %in% c(-112,-108))],lwd=2,lty=3)
+  is.null(rownames(newz))
+  legend("topleft",legend=rownames(z)[subsetrows],fill=listcolors[subsetrows],
+         bg="white",cex=1,box.col="white")
+}
+dev.off()
+
+#png("number_within_range_cfb_timelocomotion_separateloco.png",width=1000,height=500)
+pdf("number_within_range_cfb_timelocomotion_separateloco_13nov2020.pdf",width=10,height=5)
+par(mfrow=c(2,3))
+par(mar=c(4,4,0,0))
+for(time in c("Walking","Crawling","Flying","Jumping","Sessile","Swimming")) {
+  print(time)
+  subsetrows=as.numeric(which(timelocodf[,2] == time))
+  newz=z[subsetrows,]
+  bp=barplot(newz,col=listcolors[subsetrows],
+             border=listcolors[subsetrows],xlab="Longitude",
+             space=0,ylim=c(0,16),
+             ylab="Proportion of Species Overlapping",beside=F)
+  axis(1,at=bp[ticks],labels=labelvals,las=2)
+  abline(v=ticks[which(labelvals %in% c(-112,-108))],lwd=2,lty=3)
+  is.null(rownames(newz))
+  legend("topleft",legend=rownames(z)[subsetrows],fill=listcolors[subsetrows],
+         bg="white",cex=1,box.col="white")
+}
+dev.off()
+
+
+pdf("all_thermo.pdf",width=8,height=5)
+par(mar=c(2,4,0,0))
+par(mfrow=c(2,2))
+boxplot(df$Width~df$Endo.Ecto,
+        varWidth=T,notch=T,col=c("lightblue","darkred"),
+        xlab="",ylab="Barrier Width (Longitude)",
+        names=c("Ectotherm","Endotherm"))
+barplot(table(df[,c("Endo.Ecto","Locomotion.Dispersal")]),
+        col=c("lightblue","darkred"),ylab="Number of Taxa",
+        las=1,cex.names=1,
+        names=c("Crawl","Fly","Jump",
+                "Sessile","Swim","Walk"))
+box()
+legend("topleft",legend=c("Ectotherm","Endotherm"),
+       fill=c("lightblue","darkred"),bty="n",cex=1)
+barplot(t(table(df[,c("Structure","Endo.Ecto")])),
+        col=c("lightblue","darkred"),ylab="Number of Taxa",
+        las=1,cex.names=1,names=c("No","Unclear","Yes"),ylim=c(0,42))
+legend("topleft",legend=c("Ectotherm","Endotherm"),
+       fill=c("lightblue","darkred"),bty="n",cex=1)
+box()
+div=table(df[,c("Divergence.Time.Epoch","Endo.Ecto")])
+barplot(t(div[rev(c(6,1,2,4,5,3)),]),
+        #col=c("darkblue","red","orange","yellow","magenta","purple"),
+        col=c("lightblue","darkred"),
+        las=1,cex.names=0.9,ylim=c(0,27),ylab="Number of Taxa",
+        names=c("Pleist","PlioPleist","Plio","MioPlio","Mio","Unclear"))
+legend("topright",legend=c("Ectotherm","Endotherm"),
+       fill=c("lightblue","darkred"),bty="n",cex=1)
+box()
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
 file = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/review/for_review_figure.csv"
-x = read.table(file,sep="\t",header=T)
+x = read.table(file,sep=",",header=T)
 plot(x$START,1:nrow(x),
      xlim=c(0,25))
 points(x$END,1:nrow(x),
@@ -88,7 +426,7 @@ tabx=table(suby$DIVERGENCE.TIME.EPOCH,suby$MONOPHYLETIC)
 tabx=tabx[c("NOT SPLIT","UNCLEAR","PLEIST","PLIO-PLEIST",
             "PLIO","MIO-PLIO","MIO"),c("YES","UNCLEAR","NO")]
 
-png("Chapter_1_GF_mono_dark_3jun2020.png")
+png("Chapter_1_GF_mono_dark_6nov2020.png")
 par(mar=c(2,5,0,0))
 barplot(t(taby),horiz=T,las=1,col=c("darkblue","red","orange","yellow"),
         xlim=c(-22,22),xaxt="n",names=c("Not Split","Unclear",
@@ -105,7 +443,7 @@ legend("topleft",legend=c("Yes","Unclear","No"),
 abline(v=0)
 axis(1,at=c(-20,-15,-10,-5,0,5,10,15,20),labels=c(20,15,10,5,0,5,10,15,20))
 dev.off()
-
+}
 # times = c("Not Split","Mio","Mio/Plio","Plio","Plio/Pleis","Pleis","?")
 # gf_no = c(7,2,1,2,1,6,18)
 # gf_yesyes = c(1,1,1,2,1,5,2)
@@ -210,6 +548,14 @@ loc_div = table(disp[,c(1,4)])
 
 loc_div_stronly = table(disp[disp$Structure!="No",c(1,4)])
 prop.table(loc_str,margin=1)
+
+png("locomotion_type_widthcfb.png")
+par(mar=c(4,4,1,0))
+boxplot(disp$Width~disp$Locomotion.Dispersal,
+        varwidth=T,ylab="Longitudinal Width of CFB",
+        xlab="Locomotion Type")
+dev.off()
+
 
 png("locomotion_type_structure.png")
 par(mar=c(4,4,1,0))
@@ -594,3 +940,4 @@ car::Anova(m7) # t pval=0.0054
 # ## montane/not not signif
 # ## with broad type as random effect nothing sig
 # ## with family as random effect s
+
